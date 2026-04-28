@@ -492,11 +492,9 @@
        <button> Contacto </button></a>
     </div>
     <script>
-        // Configuración - REEMPLAZA CON TUS API KEYS
         const OPENWEATHER_API_KEY = 'b6bf80a069ca1aa7a0069519003fcfeb';
-        const NEWS_API_KEY = 'a59d203e11ef71411494f2ecba624bdd'; // Tu API Key de The News API
+        const NEWS_API_KEY = '/api/news'; 
 
-        // Elementos del DOM - Clima
         const cityForm = document.getElementById('cityForm');
         const cityInput = document.getElementById('cityInput');
         const cityElement = document.getElementById('city');
@@ -509,18 +507,15 @@
         const forecastWeekElement = document.getElementById('forecastWeek');
         const currentWeatherIcon = document.getElementById('current-weather-icon');
 
-        // Elementos del DOM - Noticias
         const newsCategory = document.getElementById('newsCategory');
         const newsCountry = document.getElementById('newsCountry');
         const loadNewsButton = document.getElementById('loadNews');
         const newsContainer = document.getElementById('news-container');
         const newsErrorElement = document.getElementById('news-error');
 
-        // Elementos de Modals
         const weatherModal = document.getElementById('weatherModal');
         const newsModal = document.getElementById('newsModal');
-
-        // Emojis para el clima
+//FIGURITAS CLIMA
         const weatherEmojis = {
             'clear': '☀️', 'clouds': '☁️', 'rain': '🌧️', 'drizzle': '🌦️',
             'thunderstorm': '⛈️', 'snow': '❄️', 'mist': '🌫️', 'smoke': '💨',
@@ -528,15 +523,19 @@
             'squall': '🌬️', 'tornado': '🌪️'
         };
 
-        // ========== FUNCIONES DEL CLIMA ========== //
-        async function fetchWeather(apiUrlCurrent, apiUrlForecast) {
-            try {
-                // Clima actual
-                const responseCurrent = await fetch(apiUrlCurrent);
-                if (!responseCurrent.ok) throw new Error('Ciudad no encontrada');
-                const dataCurrent = await responseCurrent.json();
+     async function fetchWeather(city) { // Recibe solo la ciudad
+    try {
+        // Ahora llamamos a tus rutas de Flask
+        const responseCurrent = await fetch(`/api/weather?q=${encodeURIComponent(city)}`);
+        const responseForecast = await fetch(`/api/forecast?q=${encodeURIComponent(city)}`);
+        
+        if (!responseCurrent.ok) throw new Error('Ciudad no encontrada');
+        
+        const dataCurrent = await responseCurrent.json();
+        const forecastData = await responseForecast.json();
+        
+    
 
-                // Actualizar UI
                 cityElement.innerText = dataCurrent.name;
                 descriptionElement.innerText = dataCurrent.weather[0].description;
                 temperatureElement.textContent = `${Math.round(dataCurrent.main.temp)} °C`;
@@ -557,11 +556,11 @@
 
                 weatherErrorElement.textContent = '';
 
-            } catch (error) {
-                weatherErrorElement.textContent = 'Error al obtener el clima. Verifica el nombre de la ciudad.';
-                resetWeatherUI();
-            }
-        }
+           } catch (error) {
+        weatherErrorElement.textContent = 'Error al obtener el clima.';
+        resetWeatherUI();
+    }
+}
 
         function displayForecast(forecastData) {
             forecastWeekElement.innerHTML = '';
@@ -682,8 +681,6 @@
             forecastWeekElement.innerHTML = '';
         }
 
-        // ========== FUNCIONES DE NOTICIAS ========== //
-      // ========== FUNCIONES DE NOTICIAS CORREGIDAS ========== //
 async function loadNews() {
     const category = newsCategory.value;
     const country = newsCountry.value;
@@ -698,7 +695,6 @@ async function loadNews() {
         
         let articles = [];
         
-        // Usar GNews
         articles = await getGNews(category, country);
         
         if (articles.length === 0) {
@@ -714,29 +710,36 @@ async function loadNews() {
         console.error('Error cargando noticias:', error);
         newsErrorElement.textContent = 'Error al cargar noticias. Usando modo demo.';
         
-        // Mostrar noticias demo en caso de error
         const articles = getDemoNews();
         displayNews(articles);
     }
 }
 
-// Función CORREGIDA para GNews
 async function getGNews(category = 'general', country = 'mx') {
-    // Mapeo de categorías para GNews
-    const categoryMap = {
-        'general': 'general',
-        'business': 'business',
-        'technology': 'technology', 
-        'entertainment': 'entertainment',
-        'sports': 'sports',
-        'science': 'science',
-        'health': 'health'
-    };
+    // Llamamos a tu ruta de Flask, no a gnews.io directamente
+    const url = `/api/gnews?category=${category}&country=${country}`;
     
-    const gnewsCategory = categoryMap[category] || 'general';
-    
-    // GNews usa "token" como parámetro, no "apikey"
-    // URL corregida para GNews
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.articles && data.articles.length > 0) {
+            return data.articles.map(article => ({
+                title: article.title,
+                description: article.description,
+                url: article.url,
+                urlToImage: article.image,
+                source: { name: article.source.name },
+                publishedAt: article.publishedAt,
+                content: article.content
+            }));
+        } else {
+            throw new Error('No se encontraron noticias');
+        }
+    } catch (error) {
+        return getDemoNews(); 
+    }
+}
     const url = `https://gnews.io/api/v4/top-headlines?category=${gnewsCategory}&lang=es&country=${country}&max=10&token=${NEWS_API_KEY}`;
     
     console.log('Consultando GNews:', url);
@@ -753,7 +756,6 @@ async function getGNews(category = 'general', country = 'mx') {
         console.log('Respuesta GNews:', data); // Para debug
         
         if (data.articles && data.articles.length > 0) {
-            // Formatear datos para compatibilidad
             return data.articles.map(article => ({
                 title: article.title,
                 description: article.description,
@@ -768,12 +770,10 @@ async function getGNews(category = 'general', country = 'mx') {
         }
     } catch (error) {
         console.error('Error GNews:', error);
-        // En caso de error, mostrar noticias de demo
         return getDemoNews();
     }
 }
 
-// Función de noticias demo mejorada
 function getDemoNews() {
     return [
         {
@@ -815,7 +815,6 @@ function getDemoNews() {
     ];
 }
 
-// Función para mostrar noticias (mejorada)
 function displayNews(articles) {
     newsContainer.innerHTML = '';
     
@@ -823,7 +822,6 @@ function displayNews(articles) {
         const newsCard = document.createElement('div');
         newsCard.className = 'news-card';
         
-        // Manejar imágenes que puedan fallar
         const imageHtml = article.urlToImage ? 
             `<img src="${article.urlToImage}" alt="${article.title}" class="news-image" 
                   onerror="this.style.display='none'">` : 
@@ -847,7 +845,6 @@ function displayNews(articles) {
     });
 }
 
-// Función para mostrar noticia completa (mejorada)
 function showFullNews(article) {
     const modalTitle = document.getElementById('modal-news-title');
     const modalContent = document.getElementById('modal-news-content');
@@ -910,7 +907,6 @@ function showFullNews(article) {
             newsModal.classList.add('active');
         }
 
-        // ========== EVENT LISTENERS ========== //
         cityForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const city = cityInput.value.trim();
@@ -927,7 +923,6 @@ function showFullNews(article) {
         newsCategory.addEventListener('change', loadNews);
         newsCountry.addEventListener('change', loadNews);
 
-        // Cerrar modals
         document.getElementById('closeWeatherModal').addEventListener('click', () => {
             weatherModal.classList.remove('active');
         });
@@ -948,9 +943,7 @@ function showFullNews(article) {
             }
         });
 
-        // Cargar noticias al iniciar
         window.addEventListener('load', () => {
-            // Cargar clima de ubicación actual
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
@@ -971,7 +964,6 @@ function showFullNews(article) {
                 });
             }
 
-            // Cargar noticias después de 2 segundos
             setTimeout(loadNews, 2000);
         });
     </script>
