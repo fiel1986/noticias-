@@ -24,84 +24,67 @@ FIXER_API_KEY = "d8a1f13a1838921da6e5552613f1538a"
 # --- CONFIGURACIÓN DE IA ---
 BASE_LAT = 25.46
 BASE_LON = -108.08
+import os
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
 
 def obtener_modelo_ia(lat, lon, nombre_ciudad="Usuario"):
-    """Carga o entrena el modelo para las coordenadas dadas."""
     modelo_id = f"{lat:.2f}_{lon:.2f}"
-    ruta_temp = f'modelo_temp_{modelo_id}.pkl'
-    ruta_lluvia = f'modelo_lluvia_{modelo_id}.pkl'
-    
+    ruta_temp = os.path.join(DATA_DIR, f'modelo_temp_{modelo_id}.pkl')
+    ruta_lluvia = os.path.join(DATA_DIR, f'modelo_lluvia_{modelo_id}.pkl')
+
     if os.path.exists(ruta_temp) and os.path.exists(ruta_lluvia):
-        print(f"🔄 Cargando IA para lat={lat}, lon={lon}...")
-        return joblib.load(ruta_temp), joblib.load(ruta_lluvia)
-    
+        try:
+            print(f"🔄 Cargando IA...")
+            return joblib.load(ruta_temp), joblib.load(ruta_lluvia)
+        except:
+            pass # si está corrupto, lo re-entrena
+
     print(f"🚀 Entrenando nueva IA para lat={lat}, lon={lon}...")
-    
     url = "https://archive-api.open-meteo.com/v1/archive"
     params = {
-        "latitude": lat,
-        "longitude": lon,
-        "start_date": "2022-01-01",
-        "end_date": "2024-12-31",
-        "daily": [
-            "temperature_2m_max",
-            "temperature_2m_min",
-            "relative_humidity_2m_max",
-            "pressure_msl_mean", 
-            "precipitation_sum"
-        ],
+        "latitude": lat, "longitude": lon,
+        "start_date": "2022-01-01", "end_date": "2024-12-31",
+        "daily": ["temperature_2m_max","temperature_2m_min","relative_humidity_2m_max","pressure_msl_mean","precipitation_sum"],
         "timezone": "America/Mexico_City"
     }
-    
     try:
-        resp = requests.get(url, params=params, timeout=10)
-        if resp.status_code != 200:
-            print("⚠️ No se pudieron descargar datos. Usando datos simulados.")
+        resp = requests.get(url, params=params, timeout=30)
+        if resp.status_code!= 200:
             return None, None
-        
-        data = resp.json()
-        raw_daily = data['daily']
-        
+        raw_daily = resp.json()['daily']
         df = pd.DataFrame({
-            'fecha': raw_daily['time'],
-            'temp_max': raw_daily['temperature_2m_max'],
-            'temp_min': raw_daily['temperature_2m_min'],
-            'humedad_max': raw_daily['relative_humidity_2m_max'],
-            'presion': raw_daily['pressure_msl_mean'], 
-            'lluvia': raw_daily['precipitation_sum']   
+            'fecha': raw_daily['time'], 'temp_max': raw_daily['temperature_2m_max'],
+            'temp_min': raw_daily['temperature_2m_min'], 'humedad_max': raw_daily['relative_humidity_2m_max'],
+            'presion': raw_daily['pressure_msl_mean'], 'lluvia': raw_daily['precipitation_sum']
         })
-        
         df['fecha'] = pd.to_datetime(df['fecha'])
-        
         df['mes'] = df['fecha'].dt.month
         df['dia_semana'] = df['fecha'].dt.dayofweek
         df['dia_anio'] = df['fecha'].dt.dayofyear
         df['estacion'] = df['mes'].apply(lambda m: 0 if m in [12,1,2] else (1 if m in [3,4,5] else (2 if m in [6,7,8] else 3)))
-        
         df['temp_siguiente'] = df['temp_max'].shift(-1)
         df['llueve_siguiente'] = (df['lluvia'].shift(-1) > 0.5).astype(int)
-        
         df = df.dropna()
-        
         if len(df) < 100:
+            print("Datos insuficientes")
             return None, None
 
-        features = ['temp_max', 'temp_min', 'humedad_max', 'presion', 'lluvia', 'mes', 'dia_semana', 'dia_anio', 'estacion']
+        features = ['temp_max','temp_min','humedad_max','presion','lluvia','mes','dia_semana','dia_anio','estacion']
         X = df[features].values
         y_temp = df['temp_siguiente'].values
         y_lluvia = df['llueve_siguiente'].values
 
-        modelo_temp = RandomForestRegressor(n_estimators=200, max_depth=12, random_state=42, n_jobs=-1)
-        modelo_lluvia = RandomForestClassifier(n_estimators=200, max_depth=12, random_state=42, n_jobs=-1)
-        
+        # FIX: n_jobs=1 y menos arboles para Render
+        modelo_temp = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42, n_jobs=1)
+        modelo_lluvia = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=1)
+
         modelo_temp.fit(X, y_temp)
         modelo_lluvia.fit(X, y_lluvia)
-        
+
         joblib.dump(modelo_temp, ruta_temp)
         joblib.dump(modelo_lluvia, ruta_lluvia)
-        
         return modelo_temp, modelo_lluvia
-        
     except Exception as e:
         print(f"❌ Error entrenando IA: {e}")
         return None, None
