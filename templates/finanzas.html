@@ -4,7 +4,7 @@
    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicons/favicon-16x16.png') }}">
-    <title>Finanzas - Conversor de Divisas</title>
+    <title>Finanzas</title>
     
     <style type="text/css">
         :root {
@@ -383,18 +383,17 @@
     border-color: rgba(0, 123, 255, 0.5);
 }
 
-/* Estilo para el botón de cambio de tema */
 #theme-toggle {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 24px; /* Tamaño del icono */
-    color: #ffd700; /* Color dorado para el sol */
+    font-size: 24px; 
+    color: #ffd700;
     transition: color 0.3s ease;
 }
 
 #theme-toggle:hover {
-    color: #fff; /* Al pasar el mouse se pone blanco */
+    color: #fff; 
 }
     </style>
 </head>
@@ -480,12 +479,9 @@
         </div>
     </div>
 
-    <script>
-        // Configuración
-        const FIXER_API_KEY = 'd8a1f13a1838921da6e5552613f1538a';
-        const NEWS_API_KEY = 'a59d203e11ef71411494f2ecba624bdd'; 
-        const API_URL = `https://data.fixer.io/api/latest?access_key=${FIXER_API_KEY}`;
-
+          <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Elementos del DOM (Ahora definidos correctamente en el alcance correcto)
         const elements = {
             themeToggle: document.getElementById('themeToggle'),
             currencyForm: document.getElementById('currencyForm'),
@@ -504,12 +500,10 @@
 
         const majorCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'MXN'];
 
+        initializeApp();
+        createStars();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            createStars();
-        });
-
+        // Funciones locales accesibles dentro de este scope
         async function initializeApp() {
             await loadCurrencies();
             await loadMajorRates();
@@ -518,42 +512,55 @@
         }
 
         function setupEventListeners() {
-            // Toggle tema
-            elements.themeToggle.addEventListener('click', toggleTheme);
+            if (elements.themeToggle) {
+                elements.themeToggle.addEventListener('click', toggleTheme);
+            }
             
-            // Conversor
-            elements.currencyForm.addEventListener('submit', handleConversion);
+            if (elements.currencyForm) {
+                elements.currencyForm.addEventListener('submit', handleConversion);
+            }
             
-            // Mostrar todas las tasas
-            elements.showAllRates.addEventListener('click', toggleAllRates);
+            if (elements.showAllRates) {
+                elements.showAllRates.addEventListener('click', toggleAllRates);
+            }
             
-            // Intercambiar divisas
-            elements.swapCurrencies.addEventListener('click', swapCurrencies);
+            if (elements.swapCurrencies) {
+                elements.swapCurrencies.addEventListener('click', swapCurrencies);
+            }
         }
 
-//principal
         async function loadCurrencies() {
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.error.info);
+                let currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'MXN', 'BRL', 'ARS'];
+                
+                try {
+                    const response = await fetch('/api/moneda?list=true');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.currencies && Array.isArray(data.currencies)) {
+                            currencies = data.currencies;
+                        }
+                    }
+                } catch (e) {
+                    console.log('No se pudo obtener lista de monedas, usando lista por defecto');
                 }
 
-                const currencies = Object.keys(data.rates).sort();
+                const fromSelect = document.getElementById('fromCurrency');
+                const toSelect = document.getElementById('toCurrency');
                 
+                if (!fromSelect || !toSelect) return;
+
+                fromSelect.innerHTML = '';
+                toSelect.innerHTML = '';
+
                 currencies.forEach(currency => {
-                    const optionFrom = new Option(currency, currency);
-                    const optionTo = new Option(currency, currency);
-                    
-                    elements.fromCurrency.add(optionFrom);
-                    elements.toCurrency.add(optionTo);
+                    const option = new Option(currency, currency);
+                    fromSelect.add(option.cloneNode(true));
+                    toSelect.add(option);
                 });
 
-                // Valores por defecto
-                elements.fromCurrency.value = 'EUR';
-                elements.toCurrency.value = 'USD';
+                fromSelect.value = 'EUR';
+                toSelect.value = 'USD';
 
             } catch (error) {
                 console.error('Error loading currencies:', error);
@@ -564,67 +571,64 @@
         async function handleConversion(event) {
             event.preventDefault();
             
-            const fromCurrency = elements.fromCurrency.value;
-            const toCurrency = elements.toCurrency.value;
-            const amount = parseFloat(elements.amount.value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+            const amount = parseFloat(document.getElementById('amount').value);
 
-            if (!fromCurrency || !toCurrency || !amount) {
+            if (!fromCurrency || !toCurrency || isNaN(amount)) {
                 showError('Por favor completa todos los campos');
                 return;
             }
 
             try {
-                elements.resultText.innerHTML = '<div class="spinner"></div>';
-                elements.result.classList.add('visible');
+                document.getElementById('resultText').innerHTML = '<div class="spinner"></div>';
+                document.getElementById('result').classList.add('visible');
 
-                const response = await fetch(API_URL);
+                const url = `/api/moneda?from=${fromCurrency}&to=${toCurrency}&amount=${amount}`;
+                const response = await fetch(url);
                 const data = await response.json();
 
-                if (!data.success) {
-                    throw new Error(data.error.info);
+                if (data.status === 'success' && data.result !== undefined) {
+                    const result = data.result;
+                    const rate = data.rate || (result / amount);
+
+                    document.getElementById('resultText').innerHTML = `
+                        <div style="font-size: 0.9em; margin-bottom: 10px;">💱 ${fromCurrency} → ${toCurrency}</div>
+                        <div style="font-size: 2rem; font-weight: bold; margin: 10px 0;">
+                            ${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}
+                        </div>
+                        <div style="font-size: 0.9em; color: rgba(255,255,255,0.8);">
+                            Tasa: 1 ${fromCurrency} = ${rate.toFixed(6)} ${toCurrency}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Error en la conversión');
                 }
 
-                const fromRate = data.rates[fromCurrency];
-                const toRate = data.rates[toCurrency];
-                const conversionRate = toRate / fromRate;
-                const result = amount * conversionRate;
-
-                elements.resultText.innerHTML = `
-                    <div style="font-size: 0.9em; margin-bottom: 10px;">💱 ${fromCurrency} → ${toCurrency}</div>
-                    <div style="font-size: 2rem; font-weight: bold; margin: 10px 0;">
-                        ${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}
-                    </div>
-                    <div style="font-size: 0.9em; color: rgba(255,255,255,0.8);">
-                        Tasa: 1 ${fromCurrency} = ${conversionRate.toFixed(6)} ${toCurrency}
-                    </div>
-                `;
-
             } catch (error) {
+                console.error('Error en conversión:', error);
                 showError('Error en la conversión: ' + error.message);
             }
         }
 
         async function loadMajorRates() {
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.error.info);
-                }
-
-                const base = data.base;
-                const rates = data.rates;
+                // Usamos tasas demo ya que la API /api/moneda no devuelve todas las tasas juntas
+                const tasasDemo = {
+                    'USD': 1.08, 'EUR': 1.0, 'GBP': 0.85, 'JPY': 160.5, 'CAD': 1.47,
+                    'AUD': 1.65, 'CHF': 0.96, 'CNY': 7.85, 'MXN': 18.5, 'BRL': 5.4
+                };
 
                 elements.majorRates.innerHTML = majorCurrencies.map(currency => `
                     <div class="rate-card">
                         <div>${getCurrencyFlag(currency)} ${currency}</div>
-                        <div class="rate-value">${rates[currency] ? rates[currency].toFixed(4) : 'N/A'}</div>
-                        <div style="font-size: 0.8em;">vs ${base}</div>
+                        <div class="rate-value">${tasasDemo[currency] ? tasasDemo[currency].toFixed(4) : 'N/A'}</div>
+                        <div style="font-size: 0.8em;">vs EUR</div>
                     </div>
                 `).join('');
 
             } catch (error) {
+                console.error('Error en loadMajorRates:', error);
                 elements.majorRates.innerHTML = '<div class="error">Error cargando tasas</div>';
             }
         }
@@ -642,15 +646,13 @@
 
         async function loadAllRates() {
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
+                const tasasDemo = {
+                    'USD': 1.08, 'EUR': 1.0, 'GBP': 0.85, 'JPY': 160.5, 'CAD': 1.47,
+                    'AUD': 1.65, 'CHF': 0.96, 'CNY': 7.85, 'MXN': 18.5, 'BRL': 5.4,
+                    'ARS': 950.0, 'RUB': 92.0, 'INR': 89.5, 'COP': 4200.0, 'CLP': 980.0
+                };
 
-                if (!data.success) {
-                    throw new Error(data.error.info);
-                }
-
-                const rates = data.rates;
-                const ratesList = Object.entries(rates)
+                const ratesList = Object.entries(tasasDemo)
                     .sort(([a], [b]) => a.localeCompare(b))
                     .map(([currency, rate]) => `
                         <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color);">
@@ -660,7 +662,6 @@
                     `).join('');
 
                 elements.allRates.innerHTML = ratesList;
-
             } catch (error) {
                 elements.allRates.innerHTML = '<div class="error">Error cargando todas las tasas</div>';
             }
@@ -668,19 +669,17 @@
 
         async function loadFinancialNews() {
             try {
-                // Usando GNews API como ejemplo
-                const newsUrl = `https://gnews.io/api/v4/top-headlines?category=business&lang=es&max=6&token=${NEWS_API_KEY}`;
-                const response = await fetch(newsUrl);
+                const response = await fetch('/api/gnews?category=finance&country=mx');
                 const data = await response.json();
 
-                if (data.articles && data.articles.length > 0) {
+                if (data.status === 'success' && data.articles && data.articles.length > 0) {
                     elements.newsContainer.innerHTML = data.articles.map(article => `
-                        <div class="news-card" onclick="window.open('${article.url}', '_blank')">
+                        <div class="news-card" onclick="window.open('${article.url}', '_blank')" style="cursor: pointer;">
                             <div class="news-title">${article.title}</div>
                             <div style="font-size: 0.9em; opacity: 0.8; margin-top: 10px;">
-                                ${article.description || 'Sin descripción disponible'}
+                                ${article.description || 'Sin descripción'}
                             </div>
-                            <div class="news-source">${article.source.name} • ${new Date(article.publishedAt).toLocaleDateString('es-ES')}</div>
+                            <div class="news-source">${article.source.name} • ${new Date(article.publishedAt).toLocaleDateString()}</div>
                         </div>
                     `).join('');
                 } else {
@@ -688,17 +687,18 @@
                         <div class="news-card">
                             <div class="news-title">Noticias de Mercados</div>
                             <div style="font-size: 0.9em; opacity: 0.8;">
-                                Las noticias financieras estarán disponibles aquí.
+                                No hay noticias financieras disponibles en este momento.
                             </div>
                         </div>
                     `;
                 }
             } catch (error) {
+                console.error('Error noticias financieras:', error);
                 elements.newsContainer.innerHTML = `
                     <div class="news-card">
                         <div class="news-title">💼 Mercados Globales</div>
                         <div style="font-size: 0.9em; opacity: 0.8;">
-                            Sigue las últimas tendencias en los mercados financieros internacionales.
+                            Error cargando noticias. Intenta más tarde.
                         </div>
                     </div>
                 `;
@@ -706,21 +706,24 @@
         }
 
         function swapCurrencies() {
-            const fromValue = elements.fromCurrency.value;
-            const toValue = elements.toCurrency.value;
+            const fromSelect = document.getElementById('fromCurrency');
+            const toSelect = document.getElementById('toCurrency');
             
-            elements.fromCurrency.value = toValue;
-            elements.toCurrency.value = fromValue;
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
             
-            // Si hay un resultado visible, reconvertir
-            if (elements.result.classList.contains('visible')) {
-                elements.currencyForm.dispatchEvent(new Event('submit'));
+            if (document.getElementById('result').classList.contains('visible')) {
+                document.getElementById('currencyForm').dispatchEvent(new Event('submit'));
             }
         }
 
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
-            elements.themeToggle.textContent = document.body.classList.contains('light-mode') ? '🌞' : '🌙';
+            const btn = document.getElementById('themeToggle');
+            if (btn) {
+                btn.textContent = document.body.classList.contains('light-mode') ? '🌞' : '🌙';
+            }
         }
 
         function getCurrencyFlag(currency) {
@@ -733,12 +736,18 @@
         }
 
         function showError(message) {
-            elements.resultText.innerHTML = `<div style="color: #ff6b6b;">❌ ${message}</div>`;
-            elements.result.classList.add('visible');
+            const resultText = document.getElementById('resultText');
+            if (resultText) {
+                resultText.innerHTML = `<div style="color: #ff6b6b;">❌ ${message}</div>`;
+            }
+            const result = document.getElementById('result');
+            if (result) result.classList.add('visible');
         }
 
         function createStars() {
             const starContainer = document.getElementById('stars');
+            if (!starContainer) return;
+
             const starCount = 200;
 
             for (let i = 0; i < starCount; i++) {
@@ -750,16 +759,22 @@
                 const duration = 5 + Math.random() * 10;
                 
                 star.style.cssText = `
+                    position: absolute;
                     left: ${x}px;
                     top: ${y}px;
                     transform: scale(${scale});
-                    animation-duration: ${duration}s;
-                    animation-delay: ${Math.random() * 10}s;
+                    animation: twinkle ${duration}s infinite;
+                    background: white;
+                    width: 2px;
+                    height: 2px;
+                    border-radius: 50%;
+                    opacity: ${Math.random()};
                 `;
                 
                 starContainer.appendChild(star);
             }
         }
+      });
     </script>
 </body>
 </html>
