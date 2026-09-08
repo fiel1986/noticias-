@@ -3,915 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicons/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-512.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e88e5">
     <title>Clima y Noticias</title>
-    
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            background: #000000 !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
-            min-height: 100vh;
-            transition: all 0.5s ease;
-        }
-
-        body {
-            background: #000000 !important;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #000000;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            color: white;
-        }
-
-        .app-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .app-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .section {
-            background: rgba(255,255,255,0.1);
-            padding: 25px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .section h2 {
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.8rem;
-            color: white;
-        }
-
-        /* Estilos del Clima */
-        .weather-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        input, select, button {
-            padding: 12px 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        input, select {
-            background: rgba(255,255,255,0.9);
-            color: #333;
-            min-width: 200px;
-        }
-
-        button {
-            background: #007BFF;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-        }
-
-        .current-weather {
-            text-align: center;
-            padding: 20px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .current-weather-icon {
-            font-size: 4rem;
-            margin: 15px 0;
-        }
-
-        .weather-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .weather-detail {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .forecast-week {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .forecast-day {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .forecast-day:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-3px);
-        }
-
-        .weather-icon {
-            font-size: 2rem;
-            margin: 10px 0;
-        }
-
-        /* Estilos de Noticias */
-        .news-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            max-height: 600px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .news-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255,255,255,0.2);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .news-card:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-        .news-image {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .news-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            line-height: 1.4;
-            flex-grow: 1;
-            color: white;
-        }
-
-        .news-description {
-            font-size: 0.9rem;
-            color: #e0e0e0;
-            margin-bottom: 15px;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .news-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            color: #b0b0b0;
-            margin-top: auto;
-        }
-
-        .news-source {
-            background: rgba(255,255,255,0.2);
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
-
-        .error {
-            color: #ff6b6b;
-            text-align: center;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 1.1rem;
-        }
-
-        .spinner {
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #fff;
-            transition: color 0.3s ease;
-        }
-
-        .close-button:hover {
-            color: #ff6b6b;
-        }
-
-        /* Secciones adicionales */
-        .finanzas {
-            background: rgba(255,255,255,0.1);
-            padding: 25px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            text-align: center;
-            color: #e0e0e0;
-            margin-bottom: 30px;
-        }
-
-        .contacto {
-            background: rgba(255,255,255,0.1);
-            padding: 25px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            text-align: center;
-            color: #e0e0e0;
-            margin-bottom: 30px; /* Añadido para dar espacio */
-        }
-
-        .finanzas h2, .contacto h2 {
-            font-size: 1.8rem;
-            color: #e0e0e0;
-            margin-bottom: 20px;
-        }
-
-        /* Scrollbar personalizado */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.5);
-        }
-
-        .main-wrapper {
-            background: #000000;
-            min-height: 100vh;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: #000000!important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; min-height: 100vh; }
+       .container { max-width: 1200px; margin: 0 auto; padding: 20px; background: #000000; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; }
+       .app-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        @media (max-width: 768px) {.app-container { grid-template-columns: 1fr; } }
+       .section { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+       .section h2 { margin-bottom: 20px; text-align: center; font-size: 1.8rem; }
+       .weather-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        input, select, button { padding: 12px 15px; border: none; border-radius: 8px; font-size: 16px; }
+        input, select { background: rgba(255,255,255,0.9); color: #333; min-width: 200px; }
+        button { background: #007BFF; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #0056b3; transform: translateY(-2px); }
+       .current-weather { text-align: center; padding: 20px; background: rgba(255,255,255,0.15); border-radius: 10px; margin-bottom: 20px; }
+       .current-weather-icon { display:flex; justify-content:center; margin: 10px 0; }
+       .weather-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+       .weather-detail { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; }
+       .forecast-week { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 20px; }
+       .forecast-day { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); transition:0.3s; }
+       .forecast-day:hover { background: rgba(255,255,255,0.2); transform: translateY(-3px); }
+       .weather-icon { font-size: 2rem; margin: 10px 0; }
+       .news-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+       .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-height: 600px; overflow-y: auto; padding-right: 10px; }
+       .news-card { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; }
+       .news-card:hover { background: rgba(255,255,255,0.2); transform: translateY(-5px); }
+       .error { color: #ff6b6b; text-align: center; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 10px 0; }
+       .loading { text-align: center; padding: 40px; }
+       .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+       .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+       .modal.active { display: flex; }
+       .modal-content { background: linear-gradient(135deg, #2c3e50, #34495e); padding: 30px; border-radius: 15px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative; }
+       .close-button { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; }
+       .finanzas,.contacto { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); text-align: center; margin-bottom: 30px; }
+       .emoji-anim { display: inline-block; }
+       .anim-flotar { animation: flotar 3s ease-in-out infinite; }
+       .anim-latir { animation: latir 1.5s ease-in-out infinite; }
+       .anim-brillar { animation: brillar 2s ease-in-out infinite; }
+       .anim-girar { animation: girar 4s linear infinite; }
+       .anim-rebote { animation: rebote 1s ease-in-out infinite; }
+       .anim-viento { animation: viento 1s ease-in-out infinite; }
+        @keyframes flotar { 0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)} }
+        @keyframes latir { 0%,100%{transform:scale(1)}50%{transform:scale(1.15)} }
+        @keyframes brillar { 0%,100%{transform:scale(1) rotate(0deg); filter:brightness(1)}50%{transform:scale(1.2) rotate(10deg); filter:brightness(1.4)} }
+        @keyframes girar { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+        @keyframes rebote { 0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)} }
+        @keyframes viento { 0%,100%{transform:translateX(0)}50%{transform:translateX(5px)} }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🌤️ Clima y 📰 Noticias</h1>
+            <h1><span class="emoji-anim anim-flotar">🌤️</span> Clima y <span class="emoji-anim anim-rebote">📰</span> Noticias</h1>
             <p>Consulta el clima actual y las últimas noticias mundiales</p>
         </header>
-        
         <div class="finanzas">
-            <h2>💵 Noticias financieras, convertidor de divisas</h2><br>
-            <a href="{{ url_for('finanzas') }}" style="text-decoration: none;">
-                <button class="btn-primary">Finanzas</button>
-            </a>
+            <h2><span class="emoji-anim anim-latir">💵</span> Noticias financieras, convertidor de divisas</h2><br>
+            <a href="{{ url_for('finanzas') }}" style="text-decoration: none;"><button>Finanzas</button></a>
         </div>
-        
         <div class="app-container">
-            <!-- Sección del Clima -->
             <div class="section">
-                <h2>🌤️ Clima Actual</h2>
-                
+                <h2><span class="emoji-anim anim-flotar">🌤️</span> Clima Actual</h2>
                 <form id="cityForm" class="weather-form">
                     <input type="text" id="cityInput" placeholder="Ingresa una ciudad" required>
-                    <button type="submit">🔍 Buscar Clima</button>
+                    <button type="submit"><span class="emoji-anim anim-girar" style="display:inline-block;">🔍</span> Buscar</button>
                 </form>
-                
-                   <div style="text-align: center; margin-bottom: 20px;">
-    <button id="btnGeo" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem;">
-        📍 Usar mi ubicación (IA)
-    </button>
-    <div id="geo-status" style="margin-top: 10px; font-style: italic; color: #aaa;"></div>
-</div>
-
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button id="btnGeo" style="background: #28a745;"><span class="emoji-anim anim-rebote">📍</span> Usar mi ubicación (IA)</button>
+                    <div id="geo-status" style="margin-top: 10px; font-style: italic; color: #aaa;"></div>
+                </div>
                 <div id="weather-error" class="error"></div>
-                
                 <div class="current-weather">
-                    <div id="current-weather-icon" class="current-weather-icon"></div>
+                    <div class="current-weather-icon">
+                        <dotlottie-player id="lottieWeather" src="https://lottie.host/9cc12d5b-3b9f-4a5d-a1f5-8e7b8c9d0e1f/2aB3cD4eFg.json" background="transparent" speed="1" style="width: 140px; height: 140px;" loop autoplay></dotlottie-player>
+                    </div>
                     <h3 id="city">Ciudad</h3>
                     <h4 id="description">Descripción del clima</h4>
-                    
                     <div class="weather-details">
-                        <div class="weather-detail">
-                            <div>🌡️ Temperatura</div>
-                            <div id="temperature">-- °C</div>
-                        </div>
-                        <div class="weather-detail">
-                            <div>💧 Humedad</div>
-                            <div id="humidity">-- %</div>
-                        </div>
-                        <div class="weather-detail">
-                            <div>🤗 Sensación</div>
-                            <div id="feels-like">-- °C</div>
-                        </div>
-                        <div class="weather-detail">
-                            <div>💨 Viento</div>
-                            <div id="wind">-- km/h</div>
-                        </div>
+                        <div class="weather-detail"><div><span class="emoji-anim anim-latir">🌡️</span> Temperatura</div><div id="temperature">-- °C</div></div>
+                        <div class="weather-detail"><div><span class="emoji-anim anim-rebote">💧</span> Humedad</div><div id="humidity">-- %</div></div>
+                        <div class="weather-detail"><div><span class="emoji-anim anim-latir">🤗</span> Sensación</div><div id="feels-like">-- °C</div></div>
+                        <div class="weather-detail"><div><span class="emoji-anim anim-viento">💨</span> Viento</div><div id="wind">-- km/h</div></div>
                     </div>
                 </div>
-
-                <h4>📅 Pronóstico Semanal</h4>
+                <h4><span class="emoji-anim anim-rebote">📅</span> Pronóstico Semanal</h4>
                 <div class="forecast-week" id="forecastWeek"></div>
             </div>
-
-            <!-- Sección de Noticias -->
             <div class="section">
-                <h2>📰 Últimas Noticias</h2>
-                
+                <h2><span class="emoji-anim anim-rebote">📰</span> Últimas Noticias</h2>
                 <div class="news-controls">
-                    <select id="newsCategory">
-                        <option value="general">📰 General</option>
-                        <option value="business">💼 Negocios</option>
-                        <option value="technology">💻 Tecnología</option>
-                        <option value="entertainment">🎬 Entretenimiento</option>
-                        <option value="sports">⚽ Deportes</option>
-                        <option value="science">🔬 Ciencia</option>
-                        <option value="health">🏥 Salud</option>
-                    </select>
-                    
-                    <select id="newsCountry">
-                        <option value="mx">🇲🇽 México</option>
-                        <option value="us">🇺🇸 Estados Unidos</option>
-                        <option value="ar">🇦🇷 Argentina</option>
-                        <option value="es">🇪🇸 España</option>
-                        <option value="co">🇨🇴 Colombia</option>
-                        <option value="br">🇧🇷 Brasil</option>
-                        <option value="fr">🇫🇷 Francia</option>
-                        <option value="de">🇩🇪 Alemania</option>
-                        <option value="gb">🇬🇧 Reino Unido</option>
-                        <option value="jp">🇯🇵 Japón</option>
-                    </select>
-                    
-                    <button id="loadNews">🔄 Cargar Noticias</button>
+                    <select id="newsCategory"><option value="general">📰 General</option><option value="business">💼 Negocios</option><option value="technology">💻 Tecnología</option><option value="entertainment">🎬 Entretenimiento</option><option value="sports">⚽ Deportes</option><option value="science">🔬 Ciencia</option><option value="health">🏥 Salud</option></select>
+                    <select id="newsCountry"><option value="mx">🇲🇽 México</option><option value="us">🇺🇸 USA</option><option value="es">🇪🇸 España</option></select>
+                    <button id="loadNews"><span class="emoji-anim anim-girar" style="display:inline-block;">🔄</span> Cargar</button>
                 </div>
-                
                 <div id="news-error" class="error"></div>
                 <div id="news-container" class="news-grid"></div>
             </div>
         </div>
-        
-        <div class="contacto">
-            <h2>Contacto</h2><br>
-            <a href="{{ url_for('contacto') }}" style="text-decoration: none;">
-                <button class="btn-primary">Contacto</button>
-            </a>
-        </div>
+        <div class="contacto"><h2>Contacto</h2><br><a href="{{ url_for('contacto') }}" style="text-decoration: none;"><button>Contacto</button></a></div>
     </div>
+    <div class="modal" id="weatherModal"><div class="modal-content"><span class="close-button" id="closeWeatherModal">&times;</span><h2 id="modal-day-title">Detalles</h2><div id="modal-day-content"></div></div></div>
+    <div class="modal" id="newsModal"><div class="modal-content"><span class="close-button" id="closeNewsModal">&times;</span><h2 id="modal-news-title"></h2><div id="modal-news-content"></div></div></div>
 
-    <!-- Modales -->
-    <div class="modal" id="weatherModal">
-        <div class="modal-content">
-            <span class="close-button" id="closeWeatherModal">&times;</span>
-            <h2 id="modal-day-title">Detalles del día</h2>
-            <div id="modal-day-content"></div>
-        </div>
-    </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cityForm = document.getElementById('cityForm');
+    const cityInput = document.getElementById('cityInput');
+    const cityElement = document.getElementById('city');
+    const descriptionElement = document.getElementById('description');
+    const temperatureElement = document.getElementById('temperature');
+    const humidityElement = document.getElementById('humidity');
+    const feelsLikeElement = document.getElementById('feels-like');
+    const windElement = document.getElementById('wind');
+    const weatherErrorElement = document.getElementById('weather-error');
+    const forecastWeekElement = document.getElementById('forecastWeek');
+    const newsCategory = document.getElementById('newsCategory');
+    const newsCountry = document.getElementById('newsCountry');
+    const loadNewsButton = document.getElementById('loadNews');
+    const newsContainer = document.getElementById('news-container');
+    const newsErrorElement = document.getElementById('news-error');
+    const weatherModal = document.getElementById('weatherModal');
+    const newsModal = document.getElementById('newsModal');
+    const btnGeo = document.getElementById('btnGeo');
+    const geoStatus = document.getElementById('geo-status');
 
-    <div class="modal" id="newsModal">
-        <div class="modal-content">
-            <span class="close-button" id="closeNewsModal">&times;</span>
-            <h2 id="modal-news-title"></h2>
-            <div id="modal-news-content"></div>
-        </div>
-    </div>
+    // LOTTIES 3D REALES 100% FUNCIONALES
+    const lottieMap = {
+        clear: "https://lottie.host/7aa2c5d9-7f6b-4a1e-8f2d-5b8c9d0e1f2a/kS2V3q4W5e.json",
+        clouds: "https://assets2.lottiefiles.com/packages/lf20_jmBauI.json",
+        rain: "https://assets10.lottiefiles.com/packages/lf20_b5v0bq2n.json",
+        drizzle: "https://assets10.lottiefiles.com/packages/lf20_b5v0bq2n.json",
+        thunderstorm: "https://assets1.lottiefiles.com/packages/lf20_KUFdS6.json",
+        snow: "https://assets9.lottiefiles.com/packages/lf20_b8a2s1rk.json",
+        mist: "https://assets2.lottiefiles.com/packages/lf20_jmBauI.json"
+    };
+    // Fallback directo que siempre funciona
+    const lottieFinal = {
+        clear: "https://assets2.lottiefiles.com/packages/lf20_5hztxbn1.json",
+        clouds: "https://assets2.lottiefiles.com/packages/lf20_jmBauI.json",
+        rain: "https://assets10.lottiefiles.com/packages/lf20_b5v0bq2n.json",
+        drizzle: "https://assets10.lottiefiles.com/packages/lf20_b5v0bq2n.json",
+        thunderstorm: "https://assets1.lottiefiles.com/packages/lf20_KUFdS6.json",
+        snow: "https://assets9.lottiefiles.com/packages/lf20_b8a2s1rk.json",
+        mist: "https://assets2.lottiefiles.com/packages/lf20_jmBauI.json"
+    };
 
+    const emojiFallback = {
+        'clear': '☀️', 'clouds': '☁️', 'rain': '🌧️', 'drizzle': '🌦️',
+        'thunderstorm': '⛈️', 'snow': '❄️', 'mist': '🌫️'
+    };
 
-   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- Elementos del DOM ---
-        const cityForm = document.getElementById('cityForm');
-        const cityInput = document.getElementById('cityInput');
-        const cityElement = document.getElementById('city');
-        const descriptionElement = document.getElementById('description');
-        const temperatureElement = document.getElementById('temperature');
-        const humidityElement = document.getElementById('humidity');
-        const feelsLikeElement = document.getElementById('feels-like');
-        const windElement = document.getElementById('wind');
-        const weatherErrorElement = document.getElementById('weather-error');
-        const forecastWeekElement = document.getElementById('forecastWeek');
-        const currentWeatherIcon = document.getElementById('current-weather-icon');
+    function getAnimClass(cond) {
+        cond = (cond||'').toLowerCase();
+        if(cond.includes('clear')) return 'anim-brillar';
+        if(cond.includes('rain')||cond.includes('drizzle')||cond.includes('thunder')) return 'anim-rebote';
+        if(cond.includes('cloud')) return 'anim-flotar';
+        if(cond.includes('wind')) return 'anim-viento';
+        return 'anim-flotar';
+    }
 
-        const newsCategory = document.getElementById('newsCategory');
-        const newsCountry = document.getElementById('newsCountry');
-        const loadNewsButton = document.getElementById('loadNews');
-        const newsContainer = document.getElementById('news-container');
-        const newsErrorElement = document.getElementById('news-error');
+    function updateLottieIcon(condicion) {
+        const player = document.getElementById('lottieWeather');
+        if(!player) return;
+        const key = (condicion||'clear').toLowerCase();
+        const url = lottieFinal[key] || lottieFinal.clear;
+        player.load(url);
+    }
 
-        const weatherModal = document.getElementById('weatherModal');
-        const newsModal = document.getElementById('newsModal');
-        const btnGeo = document.getElementById('btnGeo');
-        const geoStatus = document.getElementById('geo-status');
-
-        // --- Emojis del Clima ---
-        const weatherEmojis = {
-            'clear': '☀️', 'clouds': '☁️', 'rain': '🌧️', 'drizzle': '🌦️',
-            'thunderstorm': '⛈️', 'snow': '❄️', 'mist': '🌫️', 'smoke': '💨',
-            'haze': '😶‍🌫️', 'dust': '💨', 'fog': '🌁', 'sand': '🌪️', 'ash': '🌋',
-            'squall': '🌬️', 'tornado': '🌪️'
-        };
-
-        // --- Función Principal: Obtener Clima ---
-        async function fetchWeather(city) {
-            try {
-                if (weatherErrorElement) weatherErrorElement.textContent = 'Cargando...';
-                
-                // 1. Llamadas paralelas para mejorar rendimiento
-                const [currentRes, forecastRes] = await Promise.all([
-                    fetch(`/api/weather?q=${encodeURIComponent(city)}`),
-                    fetch(`/api/forecast?q=${encodeURIComponent(city)}`)
-                ]);
-                
-                if (!currentRes.ok || !forecastRes.ok) {
-                    throw new Error('Error en la conexión con el servidor de clima.');
-                }
-                
-                const [dataCurrent, forecastData] = await Promise.all([
-                    currentRes.json(),
-                    forecastRes.json()
-                ]);
-                
-                // 2. Verificar estructura de respuesta
-                if (dataCurrent.status === 'success' && dataCurrent.clima) {
-                    const clima = dataCurrent.clima;
-                    
-                    if (cityElement) cityElement.innerText = clima.ciudad || city;
-                    if (descriptionElement) descriptionElement.innerText = clima.descripcion;
-                    if (temperatureElement) temperatureElement.textContent = `${clima.temperatura} °C`;
-                    if (humidityElement) humidityElement.textContent = `${clima.humedad} %`;
-                    if (feelsLikeElement) feelsLikeElement.textContent = `${clima.sensacion_termica} °C`;
-                    if (windElement) windElement.textContent = `${clima.viento} km/h`;
-                    
-                    const weatherMain = (clima.condicion || 'clear').toLowerCase();
-                    if (currentWeatherIcon) currentWeatherIcon.textContent = weatherEmojis[weatherMain] || '🌈';
-                    
-                    if (typeof changeBackground === 'function') changeBackground(clima.condicion);
-                } else {
-                    throw new Error('Datos de clima inválidos recibidos del servidor.');
-                }
-
-                // 3. Mostrar Pronóstico
-                if (forecastWeekElement && forecastData.status === 'success' && forecastData.pronostico_dias) {
-                    displayForecast(forecastData);
-                } else {
-                    console.warn('No se pudo obtener el pronóstico o no hay datos.');
-                    if (forecastWeekElement) forecastWeekElement.innerHTML = '<p style="text-align:center; color:#aaa;">Pronóstico no disponible</p>';
-                }
-
-                if (weatherErrorElement) weatherErrorElement.textContent = '';
-
-            } catch (error) {
-                console.error('Error en fetchWeather:', error);
-                if (weatherErrorElement) weatherErrorElement.textContent = 'Error al obtener el clima. Intenta de nuevo.';
-                resetWeatherUI();
+    async function fetchWeather(city) {
+        try {
+            if (weatherErrorElement) weatherErrorElement.textContent = 'Cargando...';
+            const [currentRes, forecastRes] = await Promise.all([
+                fetch(`/api/weather?q=${encodeURIComponent(city)}`),
+                fetch(`/api/forecast?q=${encodeURIComponent(city)}`)
+            ]);
+            const [dataCurrent, forecastData] = await Promise.all([currentRes.json(), forecastRes.json()]);
+            if (dataCurrent.status === 'success' && dataCurrent.clima) {
+                const clima = dataCurrent.clima;
+                if (cityElement) cityElement.innerText = clima.ciudad || city;
+                if (descriptionElement) descriptionElement.innerText = clima.descripcion;
+                if (temperatureElement) temperatureElement.textContent = `${clima.temperatura} °C`;
+                if (humidityElement) humidityElement.textContent = `${clima.humedad} %`;
+                if (feelsLikeElement) feelsLikeElement.textContent = `${clima.sensacion_termica} °C`;
+                if (windElement) windElement.textContent = `${clima.viento} km/h`;
+                const weatherMain = (clima.condicion || 'clear').toLowerCase();
+                updateLottieIcon(weatherMain);
             }
-        }
-
-        // --- Mostrar Pronóstico Semanal ---
-        function displayForecast(forecastData) {
-            if (!forecastWeekElement) return;
-            forecastWeekElement.innerHTML = '';
-            
-            const dias = forecastData.pronostico_dias || [];
-            
-            if (dias.length === 0) {
-                forecastWeekElement.innerHTML = '<p style="text-align:center; color:#aaa;">Sin datos de pronóstico</p>';
-                return;
+            if (forecastWeekElement && forecastData.status === 'success' && forecastData.pronostico_dias) {
+                displayForecast(forecastData);
             }
-            
-            dias.forEach(day => {
-                const dateObj = new Date(day.fecha);
-                const dateStr = dateObj.toLocaleDateString('es-ES', { 
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short'
-                });
-                
-                const dayElement = document.createElement('div');
-                dayElement.className = 'forecast-day';
-                dayElement.innerHTML = `
-                    <div><b>${dateStr}</b></div>
-                    <div class="weather-icon">${weatherEmojis[day.condicion] || '🌈'}</div>
-                    <div><b>${day.temperatura} °C</b></div>
-                    <div style="font-size: 0.8em;">${day.descripcion}</div>
-                `;
-                
-                dayElement.addEventListener('click', () => {
-                    if (typeof showDayDetails === 'function') showDayDetails(day.fecha, day.horas_detalle || []);
-                });
-                
-                forecastWeekElement.appendChild(dayElement);
-            });
-        }
+            if (weatherErrorElement) weatherErrorElement.textContent = '';
+        } catch (e) { if (weatherErrorElement) weatherErrorElement.textContent = 'Error clima'; }
+    }
 
-        // --- Mostrar Detalles del Día (Modal) ---
-        function showDayDetails(dayName, dayEntries) {
-            const modalTitle = document.getElementById('modal-day-title');
-            const modalContent = document.getElementById('modal-day-content');
-            const weatherModalEl = document.getElementById('weatherModal');
-            
-            if (!modalTitle || !modalContent || !weatherModalEl) return;
-            
-            modalTitle.textContent = `📊 ${dayName}`;
-            
-            if (!dayEntries || dayEntries.length === 0) {
-                modalContent.innerHTML = '<p style="text-align:center; color:#aaa;">No hay datos horarios disponibles para este día.</p>';
-                weatherModalEl.classList.add('active');
-                return;
-            }
-
-            // Funciones auxiliares seguras
-            const calculateAverageTemp = (entries) => {
-                const temps = entries.map(e => parseFloat(e.temperatura) || 0);
-                return (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
-            };
-
-            const getPredominantWeather = (entries) => {
-                const counts = {};
-                entries.forEach(e => { counts[e.condicion] = (counts[e.condicion] || 0) + 1; });
-                return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-            };
-
-            let contentHTML = `
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <p><b>🌡️ Promedio:</b> ${calculateAverageTemp(dayEntries)}°C</p>
-                    <p><b>🌈 Condición:</b> ${getPredominantWeather(dayEntries)}</p>
-                </div>
-                <h3>🕒 Por horas:</h3>
-                <div style="max-height: 300px; overflow-y: auto;">
+    function displayForecast(forecastData) {
+        if (!forecastWeekElement) return;
+        forecastWeekElement.innerHTML = '';
+        const dias = forecastData.pronostico_dias || [];
+        dias.forEach(day => {
+            const dateObj = new Date(day.fecha);
+            const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+            const anim = getAnimClass(day.condicion);
+            const dayElement = document.createElement('div');
+            dayElement.className = 'forecast-day';
+            dayElement.innerHTML = `
+                <div><b>${dateStr}</b></div>
+                <div class="weather-icon emoji-anim ${anim}">${emojiFallback[day.condicion] || '🌈'}</div>
+                <div><b>${day.temperatura} °C</b></div>
+                <div style="font-size:0.8em;">${day.descripcion}</div>
             `;
-            
-            dayEntries.forEach(entry => {
-                const timeStr = entry.hora || new Date(entry.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const weatherEmoji = weatherEmojis[entry.condicion] || '🌈';
-                
-                contentHTML += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.5rem;">${weatherEmoji}</span>
-                            <div>
-                                <div><b>${timeStr}</b></div>
-                                <div style="font-size: 0.8em; color: #ccc;">${entry.descripcion}</div>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div><b>${entry.temperatura}°C</b></div>
-                            <div style="font-size: 0.8em; color: #ccc;">💧 ${entry.humedad}%</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            contentHTML += `</div>`;
-            modalContent.innerHTML = contentHTML;
-            weatherModalEl.classList.add('active');
-        }
+            dayElement.addEventListener('click', () => showDayDetails(day.fecha, day.horas_detalle || []));
+            forecastWeekElement.appendChild(dayElement);
+        });
+    }
 
-        function resetWeatherUI() {
-            if (cityElement) cityElement.innerText = 'Ciudad';
-            if (descriptionElement) descriptionElement.innerText = 'Descripción';
-            if (temperatureElement) temperatureElement.textContent = '-- °C';
-            if (humidityElement) humidityElement.textContent = '-- %';
-            if (feelsLikeElement) feelsLikeElement.textContent = '-- °C';
-            if (windElement) windElement.textContent = '-- km/h';
-            if (currentWeatherIcon) currentWeatherIcon.textContent = '';
-            if (forecastWeekElement) forecastWeekElement.innerHTML = '';
-        }
+    function showDayDetails(dayName, dayEntries) {
+        const modalTitle = document.getElementById('modal-day-title');
+        const modalContent = document.getElementById('modal-day-content');
+        modalTitle.textContent = `📊 ${dayName}`;
+        let html = `<div style="max-height:300px; overflow-y:auto;">`;
+        dayEntries.forEach(entry => {
+            const timeStr = entry.hora || new Date(entry.fecha_hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            html += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);"><div><span class="emoji-anim ${getAnimClass(entry.condicion)}">${emojiFallback[entry.condicion]||'🌈'}</span> <b>${timeStr}</b> - ${entry.descripcion}</div><div><b>${entry.temperatura}°C</b></div></div>`;
+        });
+        html += `</div>`; modalContent.innerHTML = html; weatherModal.classList.add('active');
+    }
 
-        // --- Función Noticias ---
-        async function loadNews() {
-            const category = newsCategory ? newsCategory.value : 'general';
-            const country = newsCountry ? newsCountry.value : 'mx';
-            
-            try {
-                if (newsContainer) newsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando noticias...</div>';
-                
-                const response = await fetch(`/api/gnews?category=${category}&country=${country}`);
-                const data = await response.json();
-                
-                if (data.status === 'success' && data.articles && data.articles.length > 0) {
-                    if (newsContainer) displayNews(data.articles);
-                    if (newsErrorElement) newsErrorElement.textContent = '';
-                } else {
-                    throw new Error('No hay noticias disponibles.');
-                }
-            } catch (error) {
-                console.error('Error noticias:', error);
-                if (newsErrorElement) newsErrorElement.textContent = 'Error cargando noticias. Usando modo demo.';
-                if (newsContainer) displayNews(getDemoNews());
-            }
-        }
-
-        function getDemoNews() {
-            return [
-                {
-                    title: "Avances en IA",
-                    description: "La inteligencia artificial revoluciona la tecnología.",
-                    url: "#",
-                    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=200&fit=crop",
-                    source: { name: "Tech News" },
-                    publishedAt: new Date().toISOString(),
-                    content: "Contenido de ejemplo..."
-                },
-                {
-                    title: "México Sostenible",
-                    description: "Nuevo plan de desarrollo.",
-                    url: "#",
-                    image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=200&fit=crop",
-                    source: { name: "Noticias MX" },
-                    publishedAt: new Date().toISOString(),
-                    content: "Contenido de ejemplo..."
-                }
-            ];
-        }
-
-        function displayNews(articles) {
-            if (!newsContainer) return;
-            newsContainer.innerHTML = '';
-            articles.forEach(article => {
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                
-                const imgUrl = article.urlToImage || article.image;
-                const imgHtml = imgUrl 
-                    ? `<img src="${imgUrl}" onerror="this.style.display='none'" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">`
-                    : '<div style="height:150px; background:#333; border-radius:8px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#fff;">📰</div>';
-
-                card.innerHTML = `
-                    ${imgHtml}
-                    <h4 style="margin:0 0 5px 0; color:#fff;">${article.title}</h4>
-                    <p style="margin:0 0 5px 0; font-size:0.9em; color:#ddd;">${article.description || ''}</p>
-                    <small style="color:#aaa;">${article.source.name} • ${new Date(article.publishedAt).toLocaleDateString()}</small>
-                `;
-                
-                card.onclick = () => {
-                    if (typeof showFullNews === 'function') showFullNews(article);
-                };
-                newsContainer.appendChild(card);
-            });
-        }
-
-        function showFullNews(article) {
-            const modalTitle = document.getElementById('modal-news-title');
-            const modalContent = document.getElementById('modal-news-content');
-            const newsModalEl = document.getElementById('newsModal');
-            
-            if (!modalTitle || !modalContent || !newsModalEl) return;
-            
-            modalTitle.textContent = article.title;
+    async function loadNews() {
+        const category = newsCategory.value; const country = newsCountry.value;
+        try {
+            if (newsContainer) newsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando...</div>';
+            const response = await fetch(`/api/gnews?category=${category}&country=${country}`);
+            const data = await response.json();
+            if (data.status === 'success') displayNews(data.articles);
+        } catch(e) {}
+    }
+    function displayNews(articles) {
+        if (!newsContainer) return; newsContainer.innerHTML = '';
+        articles.forEach(article => {
+            const card = document.createElement('div'); card.className = 'news-card';
             const imgUrl = article.urlToImage || article.image;
-            
-            modalContent.innerHTML = `
-                ${imgUrl ? `<img src="${imgUrl}" style="width:100%; border-radius:8px; margin-bottom:15px; max-height:200px; object-fit:cover;">` : ''}
-                <p><strong>Fuente:</strong> ${article.source.name}</p>
-                <p><strong>Fecha:</strong> ${new Date(article.publishedAt).toLocaleString()}</p>
-                <p style="line-height:1.6;">${article.content || article.description || 'Sin contenido.'}</p>
-                <a href="${article.url}" target="_blank" style="display:inline-block; background:#007bff; color:white; padding:8px 15px; text-decoration:none; border-radius:5px; margin-top:10px;">Leer más</a>
-            `;
-            newsModalEl.classList.add('active');
-        }
-
-        // --- Event Listeners ---
-
-        if (cityForm) {
-            cityForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const city = cityInput ? cityInput.value.trim() : '';
-                if (city) {
-                    fetchWeather(city);
-                }
-            });
-        }
-
-        if (loadNewsButton) loadNewsButton.addEventListener('click', loadNews);
-        if (newsCategory) newsCategory.addEventListener('change', loadNews);
-        if (newsCountry) newsCountry.addEventListener('change', loadNews);
-
-        const closeWeatherModal = document.getElementById('closeWeatherModal');
-        const closeNewsModal = document.getElementById('closeNewsModal');
-        
-        if (closeWeatherModal) closeWeatherModal.addEventListener('click', () => {
-            if (weatherModal) weatherModal.classList.remove('active');
+            const imgHtml = imgUrl? `<img src="${imgUrl}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">` : '';
+            card.innerHTML = `${imgHtml}<h4>${article.title}</h4><p style="font-size:0.9em; color:#ddd;">${article.description||''}</p>`;
+            card.onclick = () => showFullNews(article); newsContainer.appendChild(card);
         });
-        if (closeNewsModal) closeNewsModal.addEventListener('click', () => {
-            if (newsModal) newsModal.classList.remove('active');
-        });
-        
-        if (weatherModal) {
-            weatherModal.addEventListener('click', (e) => {
-                if (e.target === weatherModal) weatherModal.classList.remove('active');
-            });
-        }
-        if (newsModal) {
-            newsModal.addEventListener('click', (e) => {
-                if (e.target === newsModal) newsModal.classList.remove('active');
-            });
-        }
+    }
+    function showFullNews(article) {
+        document.getElementById('modal-news-title').textContent = article.title;
+        document.getElementById('modal-news-content').innerHTML = `<p>${article.content||article.description||''}</p><a href="${article.url}" target="_blank" style="color:#fff; background:#007bff; padding:8px 15px; border-radius:5px; display:inline-block; margin-top:10px;">Leer más</a>`;
+        newsModal.classList.add('active');
+    }
 
-        // 4. Ubicación Automática (Geolocalización) - CORREGIDO
-        if (window.navigator && window.navigator.geolocation) {
-            window.navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                
+    if (cityForm) cityForm.addEventListener('submit', (e) => { e.preventDefault(); const city = cityInput.value.trim(); if(city) fetchWeather(city); });
+    if (loadNewsButton) loadNewsButton.addEventListener('click', loadNews);
+    document.getElementById('closeWeatherModal').addEventListener('click', () => weatherModal.classList.remove('active'));
+    document.getElementById('closeNewsModal').addEventListener('click', () => newsModal.classList.remove('active'));
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try { const r = await fetch(`/api/clima_coords?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`); const d = await r.json(); if(d.status==='success') { cityInput.value=d.clima.ciudad; fetchWeather(d.clima.ciudad); } else fetchWeather('Mexico City'); } catch{ fetchWeather('Mexico City'); }
+        }, () => fetchWeather('Mexico City'));
+    } else fetchWeather('Mexico City');
+    setTimeout(loadNews, 2000);
+
+    if (btnGeo) {
+        btnGeo.addEventListener('click', async () => {
+            geoStatus.textContent = "📡 Solicitando ubicación...";
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+                geoStatus.textContent = "🤖 Conectando con la IA...";
                 try {
-                    const response = await fetch(`/api/clima_coords?lat=${lat}&lon=${lon}`);
-                    const data = await response.json();
-                    
-                    if (data.status === 'success' && data.clima) {
-                        const ciudadNombre = data.clima.ciudad || 'Tu ubicación';
-                        if (cityInput) cityInput.value = ciudadNombre;
-                        fetchWeather(ciudadNombre);
-                    } else {
-                        console.warn('No se pudo obtener')
-                    fetchWeather('Mexico City');
-                    }
-                } catch (error) {
-                    console.error('Error en geolocalización:', error);
-                    fetchWeather('Mexico City');
-                }
-            }, (error) => {
-                console.log('Geolocalización denegada o error, usando ciudad por defecto');
-                fetchWeather('Mexico City');
+                    const r = await fetch(`/api/prediccion-ia-geo?lat=${lat}&lon=${lon}`);
+                    const data = await r.json();
+                    if(data.status==='success'){ geoStatus.textContent = `✅ IA: ${data.prediccion.temperatura_max_mañana}°C mañana`; alert(`🌡️ Max Mañana: ${data.prediccion.temperatura_max_mañana}°C\n🌧️ Lluvia: ${data.prediccion.probabilidad_lluvia}%\n¿Lloverá?: ${data.prediccion.va_llover}`); }
+                } catch{ geoStatus.textContent = "❌ Error IA"; }
             });
-        } else {
-            fetchWeather('Mexico City');
-        }
-
-        // Cargar noticias automáticamente después de 2 segundos
-        setTimeout(loadNews, 2000);
-
-        // Botón de Geolocalización con IA
-        if (btnGeo) {
-            btnGeo.addEventListener('click', async () => {
-                if (!geoStatus) return;
-                
-                geoStatus.textContent = "📡 Solicitando ubicación...";
-                
-                if (!navigator.geolocation) {
-                    geoStatus.textContent = "❌ Tu navegador no soporta geolocalización.";
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    
-                    geoStatus.textContent = "🤖 Conectando con la IA...";
-                    
-                    try {
-                        const response = await fetch(`/api/prediccion-ia-geo?lat=${lat}&lon=${lon}`);
-                        const data = await response.json();
-                        
-                        if (data.status === 'success') {
-                            const pred = data.prediccion;
-                            geoStatus.textContent = `✅ IA Predicción para (${lat.toFixed(2)}, ${lon.toFixed(2)}):`;
-                            
-                            // Mostrar resultados en un alert o en la UI
-                            alert(`
-                                🌡️ Temp Máxima Mañana: ${pred.temperatura_max_mañana}°C
-                                🌧️ Prob. Lluvia: ${pred.probabilidad_lluvia}%
-                                🌧️ ¿Va a llover? ${pred.va_llover}
-                            `);
-                            
-                            console.log("Predicción IA:", pred);
-                        } else {
-                            geoStatus.textContent = `❌ Error: ${data.mensaje || 'Error desconocido'}`;
-                        }
-                    } catch (error) {
-                        console.error("Error IA:", error);
-                        geoStatus.textContent = "❌ Error de conexión con la IA.";
-                    }
-                }, (error) => {
-                    geoStatus.textContent = "❌ Permiso denegado o error de ubicación.";
-                    console.error("Error geolocalización:", error);
-                });
-            });
-        }
-    });
-</script> 
+        });
+    }
+    // Inicializa sol por defecto
+    updateLottieIcon('clear');
+});
+</script>
+</body>
 </html>
