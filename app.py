@@ -312,6 +312,56 @@ def obtener_pronostico():
     except Exception as e:
         print(f"Excepción API Pronóstico: {str(e)}")
         return generar_pronostico_demo(ciudad)
+    
+@app.route('/api/moneda')
+def api_moneda():
+    # lista de monedas para el select
+    if request.args.get('list') == 'true':
+        return jsonify({'currencies': ['USD','EUR','GBP','JPY','CAD','AUD','CHF','CNY','MXN','BRL','ARS','COP','CLP','RUB','INR']})
+
+    from_curr = request.args.get('from', 'EUR').upper()
+    to_curr = request.args.get('to', 'USD').upper()
+    amount = float(request.args.get('amount', 1))
+
+    try:
+        # Fixer.io - base EUR en plan gratuito
+        url = f"http://data.fixer.io/api/latest?access_key={FIXER_API_KEY}&base=EUR"
+        r = requests.get(url, timeout=10)
+        data = r.json()
+        if not data.get('success'):
+            raise Exception(data.get('error', {}).get('info', 'Fixer error'))
+
+        rates = data['rates']
+        # Convertir: EUR -> FROM y EUR -> TO
+        # Fixer gratuito siempre viene en base EUR
+        if from_curr == 'EUR':
+            rate_from = 1
+        else:
+            rate_from = rates.get(from_curr)
+            if not rate_from:
+                raise Exception(f"Moneda {from_curr} no encontrada")
+
+        if to_curr == 'EUR':
+            rate_to = 1
+        else:
+            rate_to = rates.get(to_curr)
+            if not rate_to:
+                raise Exception(f"Moneda {to_curr} no encontrada")
+
+        # formula: amount / rate_from * rate_to
+        # porque rates son EUR -> X
+        eur_amount = amount / rate_from if from_curr!= 'EUR' else amount
+        result = eur_amount * rate_to if to_curr!= 'EUR' else eur_amount
+        rate = rate_to / rate_from if from_curr!= 'EUR' else rate_to
+
+        return jsonify({'status': 'success', 'result': round(result, 4), 'rate': rate, 'modo': 'api_real'})
+
+    except Exception as e:
+        print(f"Error Fixer: {e} - usando demo")
+        # demo fallback
+        demo_rate = 1.08 if from_curr == 'EUR' and to_curr == 'USD' else random.uniform(0.8, 20)
+        return jsonify({'status': 'success', 'result': round(amount * demo_rate, 4), 'rate': demo_rate, 'modo': 'demo'})
+    
 @app.route('/api/gnews')
 def obtener_gnews():
     # Obtener parámetros de la URL
