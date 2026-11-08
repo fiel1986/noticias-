@@ -14,17 +14,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 app = Flask(__name__)
-app.secret_key = 'mpiz_pldm' 
+app.secret_key = 'mpiz_pldm' # puedes poner tu secreto ese es aleatorio ====NO VALIDO=====
 
 # --- TUS API KEYS ---
-NEWS_API_KEY = "a59d203e11ef71411494f2ecba624bdd"
-OPENWEATHER_API_KEY = "b6bf80a069ca1aa7a0069519003fcfeb"
-FIXER_API_KEY = "d8a1f13a1838921da6e5552613f1538a"
+NEWS_API_KEY = "tu_api"
+OPENWEATHER_API_KEY = "tu_api"
+FIXER_API_KEY = "tu_api"
 
 # --- CONFIGURACIÓN DE IA ---
-BASE_LAT = 25.46
+BASE_LAT = 25.46 
 BASE_LON = -108.08
-import os
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -40,7 +39,7 @@ def obtener_modelo_ia(lat, lon, nombre_ciudad="Usuario"):
         except:
             pass # si está corrupto, lo re-entrena
 
-    print(f"🚀 Entrenando nueva IA para lat={lat}, lon={lon}...")
+    print(f"Entrenando nueva IA para lat={lat}, lon={lon}...")
     url = "https://archive-api.open-meteo.com/v1/archive"
     params = {
         "latitude": lat, "longitude": lon,
@@ -90,7 +89,9 @@ def obtener_modelo_ia(lat, lon, nombre_ciudad="Usuario"):
         return None, None
 
 def predecir_ia_con_coord(lat, lon, modelo_temp, modelo_lluvia, ciudad="Usuario"):
+    
     """Realiza la predicción usando los modelos entrenados y datos reales de hoy."""
+    
     if not modelo_temp or not modelo_lluvia:
         return None
     
